@@ -10,8 +10,12 @@
     <li>Set Presentation mode to <strong>Native vacuum (Matter)</strong> and Save</li>
     <li>Restart Homebridge</li>
     <li>In Apple Home: delete any old TerraMow <em>Fan</em> accessory</li>
-    <li>Add Accessory → use the Matter pairing code from Homebridge for this bridge</li>
+    <li>In Homebridge logs find <code>Commissioning codes for &lt;mower&gt;</code></li>
+    <li>Add Accessory → enter that Manual Code (not the child-bridge Matter code)</li>
   </ol>
+  <p class="mt-2 mb-0 small text-muted">
+    A “PASE” / pairing error usually means the wrong code was used, or phone and Homebridge are not on the same LAN with working mDNS/IPv6. Remove any half-added accessory, restart Homebridge, and pair again.
+  </p>
 </div>
 
 <div class="card card-body mb-3">

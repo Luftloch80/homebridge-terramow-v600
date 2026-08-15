@@ -4,7 +4,7 @@
   "singular": true,
   "customUi": true,
   "strictValidation": false,
-  "headerDisplay": "<strong>Native vacuum icon requires Matter.</strong> Enable a Child Bridge for this plugin, turn on Matter for that bridge, restart, remove any old Fan accessory in Apple Home, then add the Matter vacuum with the Homebridge pairing code.",
+  "headerDisplay": "<strong>Native vacuum icon requires Matter.</strong> Enable a Child Bridge, turn on Matter for that bridge, restart, remove any old Fan in Apple Home, then pair with the <em>mower</em> code from logs (<code>Commissioning codes for …</code>) — not the bridge code. Wrong code → PASE / pairing errors.",
   "footerDisplay": "Username is fixed as <code>terramow</code>. Mode defaults to Matter (no Fan tile). Set mode to Fan only if you cannot enable Matter.",
   "schema": {
     "type": "object",

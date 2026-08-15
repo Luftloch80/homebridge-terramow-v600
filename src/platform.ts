@@ -92,7 +92,8 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
             + '  2) On that child bridge, enable Matter\n'
             + '  3) Restart Homebridge\n'
             + '  4) In Apple Home: remove any old TerraMow Fan accessory\n'
-            + '  5) Add Accessory → Matter → use the pairing code from Homebridge logs / bridge settings\n'
+            + '  5) Add Accessory → use the EXTERNAL vacuum pairing code from logs '
+            + '(“Commissioning codes for …”), not the bridge code\n'
             + 'Until Matter is enabled on THIS bridge, no Fan fallback is published (mode=matter).',
         );
       } else {
@@ -165,8 +166,14 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
 
       if (seenMatter.length > 0) {
         this.log.info(
-          'Matter vacuum published. In Apple Home: Add Accessory → select the Matter device / enter pairing code '
-            + 'shown in Homebridge for this bridge. Delete any old Fan-named TerraMow accessory first.',
+          'Matter vacuum published as an EXTERNAL accessory (own pairing code).\n'
+            + 'Pairing (fixes most “PASE” / commissioning failures):\n'
+            + '  1) In Homebridge logs, find: “Commissioning codes for <mower name>”\n'
+            + '  2) Use THAT Manual Code / QR — not the child-bridge Matter code\n'
+            + '  3) Apple Home → Add Accessory → More options → enter the code\n'
+            + '  4) Phone + Homebridge on same LAN; IPv6/mDNS must work (no AP isolation)\n'
+            + '  5) If pairing failed earlier: remove the half-added accessory in Home, '
+            + 'restart Homebridge, then pair again with a fresh code from the logs',
         );
       }
     }

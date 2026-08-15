@@ -13,7 +13,17 @@ Apple Home only shows the real **robot vacuum** icon via **Matter**. If you see 
 3. Keep Presentation mode = **Native vacuum (Matter)** (default)
 4. Restart Homebridge
 5. In Apple Home: **delete** any old TerraMow Fan accessory
-6. **Add Accessory** → Matter → pairing code from Homebridge for this bridge
+6. In Homebridge logs, find **`Commissioning codes for <mower name>`**
+7. Apple Home → **Add Accessory** → More options → enter that **Manual Code** (or QR)
+
+The vacuum is an **external** Matter accessory. Its pairing code is **not** the child-bridge Matter code. Using the wrong code often shows as a **PASE** / commissioning error.
+
+### Matter PASE / pairing failed
+
+- Use the mower’s own code from the log line above, then restart and re-pair if a previous attempt failed half-way
+- Phone, HomePod/Apple TV hub, and Homebridge must be on the **same LAN** (no guest Wi‑Fi / AP isolation)
+- Matter needs working **mDNS** and usually **IPv6** on the LAN
+- After a failed attempt: remove the incomplete accessory in Apple Home, restart Homebridge, pair again with a fresh code
 
 `mode: "hap"` forces the Fan fallback (only if you cannot use Matter).
 

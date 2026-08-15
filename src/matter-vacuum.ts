@@ -20,10 +20,29 @@ const OP = {
   DOCKED: 66,
 } as const;
 
+/** Matter OperationalState.ErrorState.NoError */
+const ERROR_NO_ERROR = 0;
+const ERROR_UNABLE_TO_COMPLETE = 2;
+
+/** Matter PowerSource.Status / BatCharge* */
+const POWER = {
+  STATUS_ACTIVE: 1,
+  STATUS_UNAVAILABLE: 3,
+  CHARGE_OK: 0,
+  CHARGE_WARNING: 1,
+  CHARGE_STATE_UNKNOWN: 0,
+  CHARGE_STATE_CHARGING: 1,
+  CHARGE_STATE_FULL: 2,
+  CHARGE_STATE_NOT_CHARGING: 3,
+} as const;
+
 /**
  * Matter RoboticVacuumCleaner accessory — same device type Roborock uses so
  * Apple Home shows the native vacuum icon and controls (requires Homebridge 2
  * with Matter enabled on this plugin's bridge / child bridge).
+ *
+ * Homebridge publishes RVC as an *external* Matter accessory with its own
+ * pairing code (see logs: "Commissioning codes for …").
  */
 export class TerraMowMatterVacuum {
   readonly accessory: MatterAccessory;
@@ -50,18 +69,27 @@ export class TerraMowMatterVacuum {
       serialNumber: mowerConfig.host,
       manufacturer: 'TerraMow',
       model: 'V600',
-      firmwareRevision: '1.3.0',
+      firmwareRevision: '1.3.2',
       hardwareRevision: '1.0.0',
       context: {
         host: mowerConfig.host,
       },
       clusters: {
+        // Match Roborock / SharkIQ: do NOT advertise an empty ServiceArea
+        // cluster — that can break Matter.js registration / Apple pairing.
+        identify: {
+          identifyTime: 0,
+          identifyType: 3,
+        },
         powerSource: {
-          status: 0,
+          status: POWER.STATUS_ACTIVE,
           order: 0,
           description: 'Battery',
+          batPresent: true,
           batPercentRemaining: 200,
-          batChargeLevel: 0,
+          batChargeLevel: POWER.CHARGE_OK,
+          batChargeState: POWER.CHARGE_STATE_UNKNOWN,
+          batFunctionalWhileCharging: true,
           batReplaceability: 1,
         },
         rvcRunMode: {
@@ -90,6 +118,7 @@ export class TerraMowMatterVacuum {
           currentMode: CLEAN_MODE_VACUUM,
         },
         rvcOperationalState: {
+          // Must include Error (id 3) or Matter.js rolls back registration.
           operationalStateList: [
             { operationalStateId: OP.STOPPED },
             { operationalStateId: OP.RUNNING },
@@ -100,12 +129,7 @@ export class TerraMowMatterVacuum {
             { operationalStateId: OP.DOCKED },
           ],
           operationalState: OP.DOCKED,
-        },
-        serviceArea: {
-          supportedAreas: [],
-          supportedMaps: [],
-          selectedAreas: [],
-          currentArea: null,
+          operationalError: { errorStateId: ERROR_NO_ERROR },
         },
       },
       handlers: {
@@ -158,12 +182,23 @@ export class TerraMowMatterVacuum {
     this.accessory.model = state.modelName || 'V600';
 
     const batPercentRemaining = Math.max(0, Math.min(200, Math.round(state.batteryLevel * 2)));
-    const batChargeLevel = state.batteryLevel <= (this.mowerConfig.lowBatteryThreshold ?? 20) ? 1 : 0;
+    const threshold = this.mowerConfig.lowBatteryThreshold ?? 20;
+    const batChargeLevel = state.batteryLevel <= threshold ? POWER.CHARGE_WARNING : POWER.CHARGE_OK;
+    const charging = isCharging(state.batteryStatus);
+    let batChargeState: number = POWER.CHARGE_STATE_NOT_CHARGING;
+    if (!state.connected) {
+      batChargeState = POWER.CHARGE_STATE_UNKNOWN;
+    } else if (charging && state.batteryLevel >= 100) {
+      batChargeState = POWER.CHARGE_STATE_FULL;
+    } else if (charging) {
+      batChargeState = POWER.CHARGE_STATE_CHARGING;
+    }
 
     await matter.updateAccessoryState(this.uuid, 'powerSource', {
       batPercentRemaining,
       batChargeLevel,
-      status: state.connected ? 0 : 1,
+      batChargeState,
+      status: state.connected ? POWER.STATUS_ACTIVE : POWER.STATUS_UNAVAILABLE,
     });
 
     const op = this.mapOperationalState(state);
@@ -173,8 +208,15 @@ export class TerraMowMatterVacuum {
 
     if (op !== this.currentOp) {
       this.currentOp = op;
+      const operationalError = op === OP.ERROR
+        ? {
+            errorStateId: ERROR_UNABLE_TO_COMPLETE,
+            errorStateDetails: state.task.hasError ? 'Mower reported a task error' : 'Mower offline or in error',
+          }
+        : { errorStateId: ERROR_NO_ERROR };
       await matter.updateAccessoryState(this.uuid, 'rvcOperationalState', {
         operationalState: op,
+        operationalError,
       });
     }
 
