@@ -1,0 +1,26 @@
+{
+  "bridge": {
+    "name": "Homebridge",
+    "username": "CC:22:3D:E3:CE:30",
+    "port": 51826,
+    "pin": "031-45-154"
+  },
+  "platforms": [
+    {
+      "platform": "TerraMowV600",
+      "name": "TerraMow",
+      "mowers": [
+        {
+          "name": "TerraMow V600",
+          "host": "192.168.1.50",
+          "password": "REPLACE_WITH_APP_MQTT_PASSWORD",
+          "port": 1883,
+          "lowBatteryThreshold": 20,
+          "showPauseSwitch": true,
+          "showDockSwitch": true,
+          "showSensors": true
+        }
+      ]
+    }
+  ]
+}

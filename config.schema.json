@@ -1,0 +1,75 @@
+{
+  "pluginAlias": "TerraMowV600",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Platform Name",
+        "type": "string",
+        "default": "TerraMow",
+        "required": true
+      },
+      "mowers": {
+        "title": "Mowers",
+        "type": "array",
+        "required": true,
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Display Name",
+              "type": "string",
+              "default": "TerraMow V600",
+              "required": true,
+              "description": "Name shown in HomeKit."
+            },
+            "host": {
+              "title": "Mower IP / Hostname",
+              "type": "string",
+              "required": true,
+              "placeholder": "192.168.1.50",
+              "description": "Local IP of the TerraMow. Find it in the TerraMow app device info."
+            },
+            "password": {
+              "title": "MQTT Password",
+              "type": "string",
+              "required": true,
+              "description": "Shown in the TerraMow app after enabling Home Assistant integration."
+            },
+            "port": {
+              "title": "MQTT Port",
+              "type": "integer",
+              "default": 1883,
+              "description": "Usually 1883. Leave default unless you changed it."
+            },
+            "lowBatteryThreshold": {
+              "title": "Low Battery Threshold (%)",
+              "type": "integer",
+              "default": 20,
+              "minimum": 5,
+              "maximum": 50
+            },
+            "showPauseSwitch": {
+              "title": "Show Pause Switch",
+              "type": "boolean",
+              "default": true
+            },
+            "showDockSwitch": {
+              "title": "Show Dock Switch",
+              "type": "boolean",
+              "default": true
+            },
+            "showSensors": {
+              "title": "Show Status Sensors",
+              "type": "boolean",
+              "default": true,
+              "description": "At Base, Returning, Fault, and Rain Delay contact sensors."
+            }
+          }
+        }
+      }
+    }
+  }
+}

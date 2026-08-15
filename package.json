@@ -1,0 +1,39 @@
+{
+  "name": "homebridge-terramow-v600",
+  "displayName": "TerraMow V600",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Homebridge plugin for TerraMow V600 (and other TerraMow models) via the local MQTT Home Assistant interface.",
+  "author": "Alexander Droste",
+  "license": "Apache-2.0",
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge",
+    "terramow",
+    "v600",
+    "lawn-mower",
+    "robot-mower",
+    "mqtt"
+  ],
+  "main": "dist/index.js",
+  "engines": {
+    "node": "^18.20.0 || ^20.15.1 || ^22 || ^24",
+    "homebridge": "^1.8.0 || ^2.0.0"
+  },
+  "scripts": {
+    "build": "rimraf ./dist && tsc",
+    "clean": "rimraf ./dist",
+    "lint": "tsc --noEmit",
+    "test": "npm run build && node --test test/*.test.js",
+    "prepublishOnly": "npm run lint && npm run build"
+  },
+  "dependencies": {
+    "mqtt": "^5.10.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "homebridge": "^1.9.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.2"
+  }
+}
