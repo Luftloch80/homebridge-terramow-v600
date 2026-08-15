@@ -143,6 +143,8 @@ export type MowerActivity =
 export interface MowerState {
   connected: boolean;
   modelName: string;
+  /** Device firmware from DP 127, e.g. `25.3` (overall.ha_module). */
+  firmwareRevision: string;
   batteryLevel: number;
   batteryStatus: BatteryStatus;
   task: TaskStatus;

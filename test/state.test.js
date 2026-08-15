@@ -11,6 +11,7 @@ import {
   bladeFilterLife,
   parseBatteryLevel,
   parseBatteryStatus,
+  parseCompatibilityInfo,
   parseCurrentOperation,
   parseMapStatus,
   parseSchedule,
@@ -193,5 +194,17 @@ describe('extra parsers', () => {
     );
     assert.equal(bladeFilterLife(0), 100);
     assert.ok(bladeFilterLife(14400) <= 0);
+  });
+
+  it('formats firmware from DP 127 compatibility info', () => {
+    assert.equal(
+      parseCompatibilityInfo({
+        overall: 25,
+        module: { home_assistant: 3, map: 2, control: 4 },
+      }),
+      '25.3',
+    );
+    assert.equal(parseCompatibilityInfo({ overall: 25 }), '25');
+    assert.equal(parseCompatibilityInfo({}), null);
   });
 });

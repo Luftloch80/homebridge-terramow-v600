@@ -19,6 +19,7 @@ export function createInitialState(): MowerState {
   return {
     connected: false,
     modelName: 'TerraMow V600',
+    firmwareRevision: '',
     batteryLevel: 100,
     batteryStatus: {
       state: 'BATTERY_STATE_DISCHARGE',
@@ -284,4 +285,29 @@ export function baseStationFilterLife(baseMinutes: number): number {
 export function areaToLightLevel(cleanAreaTenths: number): number {
   const sqm = Math.max(0, cleanAreaTenths) / 10;
   return Math.max(0.0001, Math.min(100000, sqm));
+}
+
+/**
+ * DP 127 compatibility / firmware payload.
+ * Same formatting as TerraMowHA: `{overall}.{home_assistant}` when HA module present.
+ */
+export function parseCompatibilityInfo(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') {
+    return null;
+  }
+  const data = payload as Record<string, unknown>;
+  const overall = data.overall;
+  if (typeof overall !== 'number' || Number.isNaN(overall)) {
+    return null;
+  }
+
+  const moduleInfo = data.module;
+  if (moduleInfo && typeof moduleInfo === 'object') {
+    const haVersion = (moduleInfo as Record<string, unknown>).home_assistant;
+    if (typeof haVersion === 'number' && !Number.isNaN(haVersion)) {
+      return `${overall}.${haVersion}`;
+    }
+  }
+
+  return String(overall);
 }

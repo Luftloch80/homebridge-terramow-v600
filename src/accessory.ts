@@ -5,6 +5,7 @@ import type {
 } from 'homebridge';
 
 import type { TerraMowV600Platform } from './platform.js';
+import { MANUFACTURER } from './matter-vendor.js';
 import { isCharging, isMowingActivity } from './state.js';
 import { TerraMowClient } from './terramow-client.js';
 import type { MowerConfig, MowerState } from './types.js';
@@ -32,10 +33,10 @@ export class TerraMowAccessory {
 
     this.accessory
       .getService(Service.AccessoryInformation)!
-      .setCharacteristic(Characteristic.Manufacturer, 'TerraMow')
+      .setCharacteristic(Characteristic.Manufacturer, MANUFACTURER)
       .setCharacteristic(Characteristic.Model, 'V600')
       .setCharacteristic(Characteristic.SerialNumber, this.mowerConfig.host)
-      .setCharacteristic(Characteristic.FirmwareRevision, '1.3.0');
+      .setCharacteristic(Characteristic.FirmwareRevision, '0.0.0');
 
     this.vacuumService =
       this.accessory.getServiceById(Service.Fanv2, 'vacuum') ||
@@ -144,7 +145,12 @@ export class TerraMowAccessory {
 
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(Characteristic.Model, state.modelName || 'V600');
+      .setCharacteristic(Characteristic.Manufacturer, MANUFACTURER)
+      .setCharacteristic(Characteristic.Model, state.modelName || 'V600')
+      .setCharacteristic(
+        Characteristic.FirmwareRevision,
+        state.firmwareRevision || '0.0.0',
+      );
 
     this.vacuumService.updateCharacteristic(Characteristic.Active, this.getVacuumActive());
     this.vacuumService.updateCharacteristic(

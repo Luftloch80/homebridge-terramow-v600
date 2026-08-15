@@ -11,9 +11,10 @@ import type {
 
 import { TerraMowAccessory } from './accessory.js';
 import { TerraMowMatterVacuum } from './matter-vacuum.js';
+import { applyTerraMowMatterVendorName, MANUFACTURER } from './matter-vendor.js';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { TerraMowClient } from './terramow-client.js';
-import type { MowerConfig, PlatformPluginConfig } from './types.js';
+import type { MowerConfig, MowerState, PlatformPluginConfig } from './types.js';
 
 export class TerraMowV600Platform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service;
@@ -38,7 +39,10 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
     this.log.debug('Finished initializing platform:', this.config.name ?? PLATFORM_NAME);
 
     this.api.on('didFinishLaunching', () => {
-      void this.discoverDevices();
+      void (async () => {
+        await applyTerraMowMatterVendorName(this.log);
+        await this.discoverDevices();
+      })();
     });
 
     this.api.on('shutdown', () => {
@@ -185,8 +189,14 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
   ): Promise<void> {
     const matter = this.api.matter!;
     const client = this.getOrCreateClient(mower);
-    const vacuum = new TerraMowMatterVacuum(this.api, this.log, client, mower);
+    const identity = await this.waitForDeviceIdentity(client, mower.name);
+    const vacuum = new TerraMowMatterVacuum(this.api, this.log, client, mower, identity);
     const accessory = vacuum.accessory;
+
+    this.log.info(
+      `Matter device identity for ${mower.name}: manufacturer=${MANUFACTURER}, `
+        + `model=${accessory.model}, firmware=${accessory.firmwareRevision}`,
+    );
 
     const cached = this.matterCached.get(accessory.UUID);
     if (cached) {
@@ -206,6 +216,41 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
       void vacuum.applyState(state);
     });
     void vacuum.applyState(client.getState());
+  }
+
+  /** Wait briefly for DP 127 firmware (and model/name) before Matter publish. */
+  private waitForDeviceIdentity(client: TerraMowClient, name: string): Promise<MowerState> {
+    const current = client.getState();
+    if (current.firmwareRevision) {
+      return Promise.resolve(current);
+    }
+
+    this.log.info(`[${name}] Waiting for mower firmware (DP 127) before Matter publish…`);
+    return new Promise((resolve) => {
+      const timeoutMs = 12_000;
+      const timer = setTimeout(() => {
+        client.off('state', onState);
+        const latest = client.getState();
+        if (!latest.firmwareRevision) {
+          this.log.warn(
+            `[${name}] Firmware not received within ${timeoutMs / 1000}s — publishing with placeholder; `
+              + 'restart after the mower is online to refresh Apple Home firmware.',
+          );
+        }
+        resolve(latest);
+      }, timeoutMs);
+
+      const onState = (state: MowerState): void => {
+        if (!state.firmwareRevision) {
+          return;
+        }
+        clearTimeout(timer);
+        client.off('state', onState);
+        resolve(state);
+      };
+
+      client.on('state', onState);
+    });
   }
 
   private publishHapFallback(mower: MowerConfig, seenHap: Set<string>): void {

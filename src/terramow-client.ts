@@ -7,6 +7,7 @@ import {
   deriveActivity,
   parseBatteryLevel,
   parseBatteryStatus,
+  parseCompatibilityInfo,
   parseCurrentOperation,
   parseIntValueMinutes,
   parseMapStatus,
@@ -300,6 +301,14 @@ export class TerraMowClient extends EventEmitter {
         const baseStationMinutes = parseIntValueMinutes(parsed);
         if (baseStationMinutes !== null) {
           this.updateState({ baseStationMinutes });
+        }
+        break;
+      }
+      case DP.COMPATIBILITY: {
+        const firmwareRevision = parseCompatibilityInfo(parsed);
+        if (firmwareRevision) {
+          this.log.info(`Firmware version from mower: ${firmwareRevision}`);
+          this.updateState({ firmwareRevision });
         }
         break;
       }

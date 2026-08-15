@@ -1,6 +1,7 @@
 import type { API, Logger, MatterAccessory } from 'homebridge';
 
 import type { TerraMowClient } from './terramow-client.js';
+import { MANUFACTURER } from './matter-vendor.js';
 import { isCharging } from './state.js';
 import type { MowerConfig, MowerState } from './types.js';
 
@@ -48,12 +49,15 @@ export class TerraMowMatterVacuum {
   readonly accessory: MatterAccessory;
   private currentOp: number = OP.DOCKED;
   private currentRunMode = RUN_MODE_IDLE;
+  private lastFirmware = '';
+  private lastModel = '';
 
   constructor(
     private readonly api: API,
     private readonly log: Logger,
     private readonly client: TerraMowClient,
     private readonly mowerConfig: MowerConfig,
+    initialState?: MowerState,
   ) {
     const matter = api.matter;
     if (!matter) {
@@ -61,15 +65,19 @@ export class TerraMowMatterVacuum {
     }
 
     const uuid = matter.uuid.generate(`terramow-matter-vacuum:${mowerConfig.host}`);
+    const model = initialState?.modelName || 'V600';
+    const firmwareRevision = initialState?.firmwareRevision || '0.0.0';
+    this.lastFirmware = firmwareRevision;
+    this.lastModel = model;
 
     this.accessory = {
       UUID: uuid,
       displayName: mowerConfig.name,
       deviceType: matter.deviceTypes.RoboticVacuumCleaner,
       serialNumber: mowerConfig.host,
-      manufacturer: 'TerraMow',
-      model: 'V600',
-      firmwareRevision: '1.3.2',
+      manufacturer: MANUFACTURER,
+      model,
+      firmwareRevision,
       hardwareRevision: '1.0.0',
       context: {
         host: mowerConfig.host,
@@ -179,7 +187,24 @@ export class TerraMowMatterVacuum {
       return;
     }
 
-    this.accessory.model = state.modelName || 'V600';
+    const model = state.modelName || 'V600';
+    const firmwareRevision = state.firmwareRevision || this.lastFirmware || '0.0.0';
+    this.accessory.manufacturer = MANUFACTURER;
+    this.accessory.model = model;
+    this.accessory.firmwareRevision = firmwareRevision;
+
+    if (firmwareRevision !== this.lastFirmware || model !== this.lastModel) {
+      this.lastFirmware = firmwareRevision;
+      this.lastModel = model;
+      this.log.info(
+        `[${this.mowerConfig.name}] Device info: manufacturer=${MANUFACTURER}, model=${model}, firmware=${firmwareRevision}`,
+      );
+      try {
+        await matter.updatePlatformAccessories([this.accessory]);
+      } catch (error) {
+        this.log.debug(`[${this.mowerConfig.name}] updatePlatformAccessories failed: ${String(error)}`);
+      }
+    }
 
     const batPercentRemaining = Math.max(0, Math.min(200, Math.round(state.batteryLevel * 2)));
     const threshold = this.mowerConfig.lowBatteryThreshold ?? 20;
