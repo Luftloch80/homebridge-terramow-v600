@@ -4,9 +4,6 @@ export interface MowerConfig {
   password: string;
   port?: number;
   lowBatteryThreshold?: number;
-  showPauseSwitch?: boolean;
-  showDockSwitch?: boolean;
-  showSensors?: boolean;
 }
 
 export interface PlatformPluginConfig {
@@ -17,9 +14,6 @@ export interface PlatformPluginConfig {
   password?: string;
   port?: number;
   lowBatteryThreshold?: number;
-  showPauseSwitch?: boolean;
-  showDockSwitch?: boolean;
-  showSensors?: boolean;
 }
 
 export type Mission =

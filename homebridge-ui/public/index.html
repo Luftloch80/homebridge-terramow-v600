@@ -49,9 +49,6 @@
       password: '',
       port: 1883,
       lowBatteryThreshold: 20,
-      showPauseSwitch: true,
-      showDockSwitch: true,
-      showSensors: true,
     };
   }
 
@@ -126,9 +123,6 @@
           password: block.password || '',
           port: block.port || 1883,
           lowBatteryThreshold: block.lowBatteryThreshold ?? 20,
-          showPauseSwitch: block.showPauseSwitch ?? true,
-          showDockSwitch: block.showDockSwitch ?? true,
-          showSensors: block.showSensors ?? true,
         }];
       } else {
         block.mowers = [defaultMower()];

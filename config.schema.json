@@ -4,7 +4,7 @@
   "singular": true,
   "customUi": true,
   "strictValidation": false,
-  "headerDisplay": "TerraMow appears in HomeKit as a vacuum-style Fan accessory with pause/dock switches, battery, maintenance filters, and status sensors. Enable Home Assistant in the TerraMow app to get the MQTT password.",
+  "headerDisplay": "Publishes TerraMow as a native Matter robotic vacuum (same approach as Roborock) when Matter is enabled on Homebridge 2. Enable Matter on this plugin's child bridge for the vacuum icon in Apple Home.",
   "footerDisplay": "Username is fixed as <code>terramow</code>. Need help? See the <a href=\"https://github.com/Luftloch80/homebridge-terramow-v600\" target=\"_blank\">plugin README</a>.",
   "schema": {
     "type": "object",
@@ -29,7 +29,7 @@
               "type": "string",
               "default": "TerraMow V600",
               "required": true,
-              "description": "Name shown in HomeKit."
+              "description": "Name shown in Apple Home."
             },
             "host": {
               "title": "Mower IP / Hostname",
@@ -61,22 +61,6 @@
               "default": 20,
               "minimum": 5,
               "maximum": 50
-            },
-            "showPauseSwitch": {
-              "title": "Show Pause Switch",
-              "type": "boolean",
-              "default": true
-            },
-            "showDockSwitch": {
-              "title": "Show Dock Switch",
-              "type": "boolean",
-              "default": true
-            },
-            "showSensors": {
-              "title": "Show Status Sensors",
-              "type": "boolean",
-              "default": true,
-              "description": "At Base, Returning, Fault, and Rain Delay contact sensors."
             }
           }
         }
