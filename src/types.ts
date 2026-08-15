@@ -74,6 +74,12 @@ export type BatteryChargeState =
   | 'BATTERY_STATE_CHARGED'
   | string;
 
+export type BatteryTemperature =
+  | 'BATTERY_TEMPRETURE_NORMAL'
+  | 'BATTERY_TEMPRETURE_OVERHEAT'
+  | 'BATTERY_TEMPRETURE_UNDERHEAT'
+  | string;
+
 export type BackToStationReason =
   | 'BACK_TO_STATION_REASON_NONE'
   | 'BACK_TO_STATION_REASON_LOW_BATTERY'
@@ -94,6 +100,8 @@ export interface TaskStatus {
 export interface BatteryStatus {
   state: BatteryChargeState;
   chargerConnected: boolean;
+  temperature: BatteryTemperature;
+  powerSwitchOn: boolean;
 }
 
 export interface CurrentOperation {
@@ -101,6 +109,27 @@ export interface CurrentOperation {
   cleanArea: number;
   workDuration: number;
   progressPercent: number;
+}
+
+export interface Statistics {
+  durationSeconds: number;
+  cleanArea: number;
+  cleanTimes: number;
+}
+
+export interface MapStatus {
+  mapDetected: boolean;
+  mapState: string;
+  mapId: number;
+  mapNumber: number;
+}
+
+export interface UpcomingSchedule {
+  exist: boolean;
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
 }
 
 export type MowerActivity =
@@ -118,6 +147,11 @@ export interface MowerState {
   batteryStatus: BatteryStatus;
   task: TaskStatus;
   operation: CurrentOperation;
+  statistics: Statistics;
+  mapStatus: MapStatus;
+  schedule: UpcomingSchedule;
+  bladeMinutes: number;
+  baseStationMinutes: number;
   activity: MowerActivity;
 }
 

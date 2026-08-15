@@ -71,16 +71,30 @@ MQTT username is fixed by TerraMow as `terramow` (you do not configure it).
 
 ## HomeKit controls
 
+HomeKit has no native lawn-mower / robot-vacuum HAP type, so the mower is exposed as a **Fanv2 vacuum-style** accessory (same pattern used by popular vacuum plugins), plus helper switches and sensors.
+
 | Service | Behavior |
 | --- | --- |
-| **Mow** switch | On = start / resume mowing. Off = return to dock. |
+| **Vacuum (Fan)** | On = start / resume mowing. Off = return to dock. Rotation speed = job progress %. |
 | **Pause** switch | On = pause. Off = resume. |
-| **Dock** switch | On = return to base. Off while returning = resume. |
+| **Return Home** switch | On = dock. Off while returning = resume. |
 | **Battery** | Level, charging state, low-battery status. |
-| **At Base** contact | Detected when docked or charger connected. |
-| **Returning** contact | Detected while heading home. |
-| **Fault** contact | Detected on error / disconnect. |
-| **Rain Delay** contact | Detected when rain caused a return. |
+| **At Base** contact | Docked or charger connected. |
+| **Returning** contact | Heading home. |
+| **Fault** contact | Error or disconnected. |
+| **Rain Delay** leak | Rain caused a return. |
+| **Mowing** occupancy | Currently mowing. |
+| **Working** motion | Mowing or returning. |
+| **Charger Connected** contact | Adapter connected. |
+| **Battery Temp Alert** contact | Battery over/under temperature. |
+| **Night Delay** contact | Waiting for daylight / night return. |
+| **Motor Overheat** contact | Motor/wheel overheat return. |
+| **Map Ready** contact | Complete map detected. |
+| **Schedule Upcoming** contact | Next schedule exists. |
+| **Blade Wear** filter | Blade maintenance life %. |
+| **Base Station Wear** filter | Base station maintenance life %. |
+| **Job Progress** humidity | Current job progress 0–100%. |
+| **Cleaned Area** light | Session/total cleaned area readout. |
 
 ## Protocol notes
 

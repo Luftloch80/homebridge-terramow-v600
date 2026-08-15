@@ -8,9 +8,13 @@ import {
   isCharging,
   isMowingActivity,
   isRainDelay,
+  bladeFilterLife,
   parseBatteryLevel,
   parseBatteryStatus,
   parseCurrentOperation,
+  parseMapStatus,
+  parseSchedule,
+  parseStatistics,
   parseTaskStatus,
 } from '../dist/state.js';
 
@@ -29,8 +33,15 @@ describe('parseBatteryStatus', () => {
       parseBatteryStatus({
         state: 'BATTERY_STATE_CHARGING',
         charger_connected: true,
+        tempreture: 'BATTERY_TEMPRETURE_NORMAL',
+        is_switch_on: true,
       }),
-      { state: 'BATTERY_STATE_CHARGING', chargerConnected: true },
+      {
+        state: 'BATTERY_STATE_CHARGING',
+        chargerConnected: true,
+        temperature: 'BATTERY_TEMPRETURE_NORMAL',
+        powerSwitchOn: true,
+      },
     );
   });
 });
@@ -144,7 +155,7 @@ describe('deriveActivity', () => {
 
 describe('helpers', () => {
   it('classifies charging and rain delay', () => {
-    assert.equal(isCharging({ state: 'BATTERY_STATE_CHARGING', chargerConnected: true }), true);
+    assert.equal(isCharging({ state: 'BATTERY_STATE_CHARGING', chargerConnected: true, temperature: 'BATTERY_TEMPRETURE_NORMAL', powerSwitchOn: true }), true);
     assert.equal(isMowingActivity('mowing'), true);
     assert.equal(isMowingActivity('paused'), true);
     assert.equal(isMowingActivity('docked'), false);
@@ -159,8 +170,28 @@ describe('helpers', () => {
       true,
     );
     assert.equal(
-      isAtBase('docked', { state: 'BATTERY_STATE_CHARGED', chargerConnected: true }),
+      isAtBase('docked', { state: 'BATTERY_STATE_CHARGED', chargerConnected: true, temperature: 'BATTERY_TEMPRETURE_NORMAL', powerSwitchOn: true }),
       true,
     );
+  });
+});
+
+describe('extra parsers', () => {
+  it('parses statistics map and schedule', () => {
+    assert.deepEqual(
+      parseStatistics({ duration: 7200, clean_area: 2000, clean_times: 5 }),
+      { durationSeconds: 7200, cleanArea: 2000, cleanTimes: 5 },
+    );
+    assert.equal(parseMapStatus({ is_map_detected: true, map_state: 'MAP_STATE_COMPLETE' })?.mapDetected, true);
+    assert.equal(
+      parseSchedule({
+        exist: true,
+        start_time: { hour: 14, minute: 30 },
+        end_time: { hour: 16, minute: 0 },
+      })?.startHour,
+      14,
+    );
+    assert.equal(bladeFilterLife(0), 100);
+    assert.ok(bladeFilterLife(14400) <= 0);
   });
 });

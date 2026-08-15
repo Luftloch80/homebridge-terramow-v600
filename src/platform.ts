@@ -70,11 +70,16 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
         this.log.info('Restoring existing accessory from cache:', existing.displayName);
         existing.context.mower = mower;
         existing.displayName = mower.name;
+        existing.category = this.api.hap.Categories.FAN;
         this.api.updatePlatformAccessories([existing]);
         this.handlers.set(uuid, new TerraMowAccessory(this, existing, mower));
       } else {
         this.log.info('Adding new accessory:', mower.name);
-        const accessory = new this.api.platformAccessory(mower.name, uuid);
+        const accessory = new this.api.platformAccessory(
+          mower.name,
+          uuid,
+          this.api.hap.Categories.FAN,
+        );
         accessory.context.mower = mower;
         this.handlers.set(uuid, new TerraMowAccessory(this, accessory, mower));
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

@@ -8,6 +8,10 @@ import {
   parseBatteryLevel,
   parseBatteryStatus,
   parseCurrentOperation,
+  parseIntValueMinutes,
+  parseMapStatus,
+  parseSchedule,
+  parseStatistics,
   parseTaskStatus,
 } from './state.js';
 import type { MowerState } from './types.js';
@@ -189,6 +193,11 @@ export class TerraMowClient extends EventEmitter {
       TOPIC.robot(DP.TASK_STATUS),
       TOPIC.robot(DP.BATTERY_STATUS),
       TOPIC.robot(DP.CURRENT_OPERATION),
+      TOPIC.robot(DP.MAP_STATUS),
+      TOPIC.robot(DP.STATISTICS),
+      TOPIC.robot(DP.BASE_STATION_TIME),
+      TOPIC.robot(DP.BLADE_TIME),
+      TOPIC.robot(DP.SCHEDULE),
       TOPIC.robot(DP.COMPATIBILITY),
       TOPIC.MODEL_NAME,
       'data_point/+/robot',
@@ -259,6 +268,41 @@ export class TerraMowClient extends EventEmitter {
         }
         break;
       }
+      case DP.STATISTICS: {
+        const statistics = parseStatistics(parsed);
+        if (statistics) {
+          this.updateState({ statistics });
+        }
+        break;
+      }
+      case DP.MAP_STATUS: {
+        const mapStatus = parseMapStatus(parsed);
+        if (mapStatus) {
+          this.updateState({ mapStatus });
+        }
+        break;
+      }
+      case DP.SCHEDULE: {
+        const schedule = parseSchedule(parsed);
+        if (schedule) {
+          this.updateState({ schedule });
+        }
+        break;
+      }
+      case DP.BLADE_TIME: {
+        const bladeMinutes = parseIntValueMinutes(parsed);
+        if (bladeMinutes !== null) {
+          this.updateState({ bladeMinutes });
+        }
+        break;
+      }
+      case DP.BASE_STATION_TIME: {
+        const baseStationMinutes = parseIntValueMinutes(parsed);
+        if (baseStationMinutes !== null) {
+          this.updateState({ baseStationMinutes });
+        }
+        break;
+      }
       default:
         this.log.debug(`Ignoring data point ${dpId}`);
         break;
@@ -308,6 +352,15 @@ export class TerraMowClient extends EventEmitter {
       operation: partial.operation
         ? { ...this.state.operation, ...partial.operation }
         : this.state.operation,
+      statistics: partial.statistics
+        ? { ...this.state.statistics, ...partial.statistics }
+        : this.state.statistics,
+      mapStatus: partial.mapStatus
+        ? { ...this.state.mapStatus, ...partial.mapStatus }
+        : this.state.mapStatus,
+      schedule: partial.schedule
+        ? { ...this.state.schedule, ...partial.schedule }
+        : this.state.schedule,
     };
     next.activity = deriveActivity(next.task, next.connected);
     this.state = next;

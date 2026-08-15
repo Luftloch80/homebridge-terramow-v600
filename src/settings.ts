@@ -13,8 +13,17 @@ export const DP = {
   TASK_STATUS: 107,
   BATTERY_STATUS: 108,
   CURRENT_OPERATION: 113,
+  MAP_STATUS: 117,
+  STATISTICS: 124,
+  BASE_STATION_TIME: 125,
+  BLADE_TIME: 126,
   COMPATIBILITY: 127,
+  SCHEDULE: 138,
 } as const;
+
+/** Recommended maintenance intervals from TerraMow HA docs (minutes). */
+export const BLADE_MAINTENANCE_CYCLE_MINUTES = 14400;
+export const BASE_STATION_MAINTENANCE_CYCLE_MINUTES = 43200;
 
 export const TOPIC = {
   MODEL_NAME: 'model/name',

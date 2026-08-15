@@ -4,7 +4,7 @@
   "singular": true,
   "customUi": true,
   "strictValidation": false,
-  "headerDisplay": "Control TerraMow V600 (and other TerraMow models) over the local MQTT Home Assistant interface. Enable Home Assistant in the TerraMow app to get the MQTT password.",
+  "headerDisplay": "TerraMow appears in HomeKit as a vacuum-style Fan accessory with pause/dock switches, battery, maintenance filters, and status sensors. Enable Home Assistant in the TerraMow app to get the MQTT password.",
   "footerDisplay": "Username is fixed as <code>terramow</code>. Need help? See the <a href=\"https://github.com/Luftloch80/homebridge-terramow-v600\" target=\"_blank\">plugin README</a>.",
   "schema": {
     "type": "object",
