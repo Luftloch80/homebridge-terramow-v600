@@ -20,10 +20,12 @@ The vacuum is an **external** Matter accessory. Its pairing code is **not** the 
 
 ### Matter PASE / pairing failed
 
-- Use the mower’s own code from the log line above, then restart and re-pair if a previous attempt failed half-way
-- Phone, HomePod/Apple TV hub, and Homebridge must be on the **same LAN** (no guest Wi‑Fi / AP isolation)
-- Matter needs working **mDNS** and usually **IPv6** on the LAN
-- After a failed attempt: remove the incomplete accessory in Apple Home, restart Homebridge, pair again with a fresh code
+`PasePake3 … InvalidParam` almost always means the **setup code does not match** the device Apple is talking to (wrong code, or a stale code after a restart).
+
+1. After the latest Homebridge restart, copy the **Manual Code** under `Commissioning codes for <mower name>`
+2. Apple Home → Add Accessory → **More options** → enter that code (do not pick a nearby bridge tile and reuse another code)
+3. Phone, HomePod/Apple TV, and Homebridge on the **same LAN** (no guest Wi‑Fi / AP isolation); mDNS/IPv6 must work
+4. If pairing already failed: remove any half-added Matter accessory in Home, restart Homebridge, wait for a **new** `Commissioning codes for …` line, then pair once
 
 `mode: "hap"` forces the Fan fallback (only if you cannot use Matter).
 

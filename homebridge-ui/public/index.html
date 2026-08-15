@@ -14,7 +14,9 @@
     <li>Add Accessory → enter that Manual Code (not the child-bridge Matter code)</li>
   </ol>
   <p class="mt-2 mb-0 small text-muted">
-    A “PASE” / pairing error usually means the wrong code was used, or phone and Homebridge are not on the same LAN with working mDNS/IPv6. Remove any half-added accessory, restart Homebridge, and pair again.
+    <code>PasePake3 / InvalidParam</code> means the setup code did not match the device Apple contacted.
+    Use the Manual Code under <code>Commissioning codes for &lt;mower&gt;</code> from the <em>latest</em> restart
+    (not the child-bridge Matter QR). Remove any half-added accessory, restart, then pair once with the new code.
   </p>
 </div>
 
