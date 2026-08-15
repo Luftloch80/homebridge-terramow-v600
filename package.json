@@ -2,7 +2,7 @@
   "name": "homebridge-terramow-v600",
   "displayName": "TerraMow V600",
   "type": "module",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Homebridge plugin for TerraMow V600. Publishes a native Matter robotic vacuum (Apple Home vacuum icon) over the local MQTT interface, like Roborock Matter plugins.",
   "author": "Alexander Droste",
   "license": "Apache-2.0",

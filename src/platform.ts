@@ -25,6 +25,7 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
   private readonly clients = new Map<string, TerraMowClient>();
   private readonly matterCached = new Map<string, MatterAccessory>();
   private matterEnabled = false;
+  private matterAvailable = false;
 
   constructor(
     public readonly log: Logging,
@@ -64,16 +65,39 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
     this.matterCached.set(accessory.UUID, accessory);
   }
 
+  private presentationMode(): 'matter' | 'hap' {
+    return this.config.mode === 'hap' ? 'hap' : 'matter';
+  }
+
   private async discoverDevices(): Promise<void> {
+    this.matterAvailable = this.api.isMatterAvailable?.() ?? false;
     this.matterEnabled = this.api.isMatterEnabled?.() ?? false;
-    if (this.matterEnabled) {
-      this.log.info('Matter is enabled — publishing native RoboticVacuumCleaner accessories.');
-    } else {
-      this.log.warn(
-        'Matter is not enabled on this bridge. Apple Home will show a Fan-style accessory. '
-          + 'For a native vacuum icon (like Roborock), use Homebridge 2 and enable Matter '
-          + 'on this plugin\'s bridge / child bridge, then restart.',
-      );
+    const mode = this.presentationMode();
+
+    this.log.info(
+      `Presentation mode=${mode}; Matter available=${this.matterAvailable}; Matter enabled on this bridge=${this.matterEnabled}`,
+    );
+
+    if (mode === 'matter') {
+      if (!this.matterAvailable) {
+        this.log.error(
+          'Native vacuum requires Homebridge 2 with Matter support. '
+            + 'Upgrade Homebridge, or set mode=hap for a Fan fallback.',
+        );
+      } else if (!this.matterEnabled || !this.api.matter) {
+        this.log.error(
+          'Matter is NOT enabled on the bridge running TerraMow — Apple Home will not get a vacuum tile.\n'
+            + 'Fix:\n'
+            + '  1) Plugins → TerraMow V600 → enable Child Bridge (recommended)\n'
+            + '  2) On that child bridge, enable Matter\n'
+            + '  3) Restart Homebridge\n'
+            + '  4) In Apple Home: remove any old TerraMow Fan accessory\n'
+            + '  5) Add Accessory → Matter → use the pairing code from Homebridge logs / bridge settings\n'
+            + 'Until Matter is enabled on THIS bridge, no Fan fallback is published (mode=matter).',
+        );
+      } else {
+        this.log.info('Matter enabled — publishing native RoboticVacuumCleaner (external Matter accessory).');
+      }
     }
 
     const mowers = this.resolveMowers();
@@ -86,6 +110,7 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
 
     const seenHap = new Set<string>();
     const seenMatter: MatterAccessory[] = [];
+    const useMatter = mode === 'matter' && this.matterEnabled && !!this.api.matter;
 
     for (const mower of mowers) {
       if (!mower.host || !mower.password) {
@@ -93,31 +118,56 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
         continue;
       }
 
-      if (this.matterEnabled && this.api.matter) {
-        await this.publishMatterVacuum(mower, seenMatter);
-      } else {
+      if (useMatter) {
+        try {
+          await this.publishMatterVacuum(mower, seenMatter);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.log.error(
+            `Failed to publish Matter vacuum for "${mower.name}": ${message}. `
+              + 'Ensure Matter is enabled on this plugin\'s bridge and restart again.',
+          );
+        }
+      } else if (mode === 'hap') {
         this.publishHapFallback(mower, seenHap);
       }
+      // mode=matter but Matter off → publish nothing (avoid Fan tile)
     }
 
-    // Remove stale HAP accessories
-    for (const [uuid, accessory] of this.accessories) {
-      if (!seenHap.has(uuid)) {
-        this.log.info('Removing HAP accessory from cache:', accessory.displayName);
+    // Always strip HAP accessories when using Matter mode (including failed enable)
+    if (mode === 'matter') {
+      for (const [uuid, accessory] of [...this.accessories.entries()]) {
+        this.log.info('Removing HAP accessory (Matter mode):', accessory.displayName);
         this.hapHandlers.get(uuid)?.destroy();
         this.hapHandlers.delete(uuid);
         this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
         this.accessories.delete(uuid);
       }
+    } else {
+      for (const [uuid, accessory] of this.accessories) {
+        if (!seenHap.has(uuid)) {
+          this.log.info('Removing HAP accessory from cache:', accessory.displayName);
+          this.hapHandlers.get(uuid)?.destroy();
+          this.hapHandlers.delete(uuid);
+          this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+          this.accessories.delete(uuid);
+        }
+      }
     }
 
-    // Remove stale Matter accessories
-    if (this.matterEnabled && this.api.matter) {
+    if (useMatter && this.api.matter) {
       const keep = new Set(seenMatter.map((a) => a.UUID));
       const stale = [...this.matterCached.values()].filter((a) => !keep.has(a.UUID));
       if (stale.length) {
         this.log.info(`Removing ${stale.length} stale Matter accessor(ies)`);
         await this.api.matter.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, stale);
+      }
+
+      if (seenMatter.length > 0) {
+        this.log.info(
+          'Matter vacuum published. In Apple Home: Add Accessory → select the Matter device / enter pairing code '
+            + 'shown in Homebridge for this bridge. Delete any old Fan-named TerraMow accessory first.',
+        );
       }
     }
   }
@@ -136,7 +186,7 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
       this.log.info('Updating Matter vacuum:', accessory.displayName);
       await matter.updatePlatformAccessories([accessory]);
     } else {
-      this.log.info('Adding Matter vacuum:', accessory.displayName);
+      this.log.info('Adding Matter vacuum (external RoboticVacuumCleaner):', accessory.displayName);
       await matter.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     }
 
@@ -148,19 +198,7 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
     client.on('state', (state) => {
       void vacuum.applyState(state);
     });
-    // Push current state if already connected
     void vacuum.applyState(client.getState());
-
-    // Ensure no HAP twin remains for this mower
-    const hapUuid = this.api.hap.uuid.generate(`terramow-v600:${mower.host}`);
-    const hapAccessory = this.accessories.get(hapUuid);
-    if (hapAccessory) {
-      this.log.info('Removing HAP fallback for Matter vacuum:', hapAccessory.displayName);
-      this.hapHandlers.get(hapUuid)?.destroy();
-      this.hapHandlers.delete(hapUuid);
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [hapAccessory]);
-      this.accessories.delete(hapUuid);
-    }
   }
 
   private publishHapFallback(mower: MowerConfig, seenHap: Set<string>): void {
@@ -169,14 +207,14 @@ export class TerraMowV600Platform implements DynamicPlatformPlugin {
 
     const existing = this.accessories.get(uuid);
     if (existing) {
-      this.log.info('Restoring HAP fallback accessory:', existing.displayName);
+      this.log.info('Restoring HAP Fan fallback:', existing.displayName);
       existing.context.mower = mower;
       existing.displayName = mower.name;
       existing.category = this.api.hap.Categories.FAN;
       this.api.updatePlatformAccessories([existing]);
       this.hapHandlers.set(uuid, new TerraMowAccessory(this, existing, mower));
     } else {
-      this.log.info('Adding HAP fallback accessory:', mower.name);
+      this.log.info('Adding HAP Fan fallback:', mower.name);
       const accessory = new this.api.platformAccessory(
         mower.name,
         uuid,

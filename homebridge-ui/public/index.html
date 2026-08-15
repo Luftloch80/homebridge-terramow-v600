@@ -1,16 +1,26 @@
+<div class="card card-body mb-3 border-warning">
+  <h5 class="card-title mb-2">Native vacuum icon (Matter)</h5>
+  <p class="mb-2">
+    Apple Home only shows a real vacuum tile via <strong>Matter</strong> (same as Roborock).
+    If you still see a Fan, Matter is not enabled on the bridge running this plugin.
+  </p>
+  <ol class="mb-0 ps-3">
+    <li>Plugins → TerraMow V600 → enable <strong>Child Bridge</strong></li>
+    <li>Open that child bridge settings → enable <strong>Matter</strong></li>
+    <li>Set Presentation mode to <strong>Native vacuum (Matter)</strong> and Save</li>
+    <li>Restart Homebridge</li>
+    <li>In Apple Home: delete any old TerraMow <em>Fan</em> accessory</li>
+    <li>Add Accessory → use the Matter pairing code from Homebridge for this bridge</li>
+  </ol>
+</div>
+
 <div class="card card-body mb-3">
-  <h5 class="card-title mb-2">TerraMow setup</h5>
+  <h5 class="card-title mb-2">TerraMow MQTT setup</h5>
   <p class="mb-2 text-muted">
     In the TerraMow app, enable <strong>Home Assistant</strong> integration. That starts the mower’s local MQTT broker and shows the password.
     MQTT username is always <code>terramow</code>.
   </p>
-  <ol class="mb-0 ps-3 text-muted">
-    <li>Enter the mower IP and MQTT password in the form below.</li>
-    <li>Optionally use <strong>Test Connection</strong> to verify the broker.</li>
-    <li>Click <strong>Save</strong>, then restart Homebridge.</li>
-  </ol>
 </div>
-
 <div class="card card-body mb-3">
   <h5 class="card-title mb-3">Test MQTT connection</h5>
   <div class="row g-2 align-items-end">

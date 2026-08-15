@@ -6,16 +6,16 @@ The mower runs an on-device MQTT broker. This plugin connects over your LAN — 
 
 ## Native vacuum in Apple Home (like Roborock)
 
-Apple Home only shows the real **robot vacuum** icon and UI via **Matter** (not classic HomeKit/HAP). This plugin follows the same approach as Roborock Matter plugins:
+Apple Home only shows the real **robot vacuum** icon via **Matter**. If you see a **Fan**, Matter is not enabled on the bridge running this plugin.
 
-1. Use **Homebridge 2**
-2. Run this plugin in a **child bridge**
-3. Enable **Matter** on that child bridge
-4. Restart, then add the Matter bridge / vacuum in Apple Home with the pairing code from Homebridge
+1. Plugins → TerraMow V600 → enable **Child Bridge**
+2. Enable **Matter** on that child bridge
+3. Keep Presentation mode = **Native vacuum (Matter)** (default)
+4. Restart Homebridge
+5. In Apple Home: **delete** any old TerraMow Fan accessory
+6. **Add Accessory** → Matter → pairing code from Homebridge for this bridge
 
-You get start/stop cleaning, pause, resume, return home, and battery on one vacuum tile — **no extra sensors**.
-
-If Matter is not enabled, the plugin falls back to a simple Fanv2 HAP accessory (no sensors) and logs a warning.
+`mode: "hap"` forces the Fan fallback (only if you cannot use Matter).
 
 ## Requirements
 

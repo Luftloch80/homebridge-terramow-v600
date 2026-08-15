@@ -8,6 +8,12 @@ export interface MowerConfig {
 
 export interface PlatformPluginConfig {
   name?: string;
+  /**
+   * `matter` (default): native RoboticVacuumCleaner in Apple Home (requires
+   * Homebridge 2 + Matter enabled on this plugin's bridge/child bridge).
+   * `hap`: classic Fanv2 fallback only.
+   */
+  mode?: 'matter' | 'hap';
   mowers?: MowerConfig[];
   // Legacy single-mower fields (still supported)
   host?: string;

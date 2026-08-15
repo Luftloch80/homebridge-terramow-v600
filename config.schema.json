@@ -4,8 +4,8 @@
   "singular": true,
   "customUi": true,
   "strictValidation": false,
-  "headerDisplay": "Publishes TerraMow as a native Matter robotic vacuum (same approach as Roborock) when Matter is enabled on Homebridge 2. Enable Matter on this plugin's child bridge for the vacuum icon in Apple Home.",
-  "footerDisplay": "Username is fixed as <code>terramow</code>. Need help? See the <a href=\"https://github.com/Luftloch80/homebridge-terramow-v600\" target=\"_blank\">plugin README</a>.",
+  "headerDisplay": "<strong>Native vacuum icon requires Matter.</strong> Enable a Child Bridge for this plugin, turn on Matter for that bridge, restart, remove any old Fan accessory in Apple Home, then add the Matter vacuum with the Homebridge pairing code.",
+  "footerDisplay": "Username is fixed as <code>terramow</code>. Mode defaults to Matter (no Fan tile). Set mode to Fan only if you cannot enable Matter.",
   "schema": {
     "type": "object",
     "properties": {
@@ -13,14 +13,28 @@
         "title": "Platform Name",
         "type": "string",
         "default": "TerraMow",
-        "required": true,
-        "description": "Internal Homebridge platform name."
+        "required": true
+      },
+      "mode": {
+        "title": "Apple Home Presentation",
+        "type": "string",
+        "default": "matter",
+        "oneOf": [
+          {
+            "title": "Native vacuum (Matter) — required for vacuum icon",
+            "enum": ["matter"]
+          },
+          {
+            "title": "Fan fallback (classic HomeKit / no Matter)",
+            "enum": ["hap"]
+          }
+        ],
+        "description": "Matter must be enabled on the bridge that runs this plugin (usually its child bridge)."
       },
       "mowers": {
         "title": "Mowers",
         "type": "array",
         "required": true,
-        "description": "Add one entry per TerraMow on your network.",
         "items": {
           "type": "object",
           "properties": {
@@ -28,32 +42,28 @@
               "title": "Display Name",
               "type": "string",
               "default": "TerraMow V600",
-              "required": true,
-              "description": "Name shown in Apple Home."
+              "required": true
             },
             "host": {
               "title": "Mower IP / Hostname",
               "type": "string",
               "default": "",
               "required": true,
-              "placeholder": "192.168.1.50",
-              "description": "Local IP from TerraMow app → device info."
+              "placeholder": "192.168.1.50"
             },
             "password": {
               "title": "MQTT Password",
               "type": "string",
               "default": "",
               "required": true,
-              "format": "password",
-              "description": "Shown in the TerraMow app after enabling Home Assistant."
+              "format": "password"
             },
             "port": {
               "title": "MQTT Port",
               "type": "integer",
               "default": 1883,
               "minimum": 1,
-              "maximum": 65535,
-              "description": "Usually 1883."
+              "maximum": 65535
             },
             "lowBatteryThreshold": {
               "title": "Low Battery Threshold (%)",
