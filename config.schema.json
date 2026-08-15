@@ -2,47 +2,55 @@
   "pluginAlias": "TerraMowV600",
   "pluginType": "platform",
   "singular": true,
+  "customUi": true,
+  "strictValidation": false,
+  "headerDisplay": "Control TerraMow V600 (and other TerraMow models) over the local MQTT Home Assistant interface. Enable Home Assistant in the TerraMow app to get the MQTT password.",
+  "footerDisplay": "Username is fixed as <code>terramow</code>. Need help? See the <a href=\"https://github.com/Luftloch80/homebridge-terramow-v600\" target=\"_blank\">plugin README</a>.",
   "schema": {
     "type": "object",
+    "required": ["name", "mowers"],
     "properties": {
       "name": {
         "title": "Platform Name",
         "type": "string",
         "default": "TerraMow",
-        "required": true
+        "description": "Internal Homebridge platform name."
       },
       "mowers": {
         "title": "Mowers",
         "type": "array",
-        "required": true,
+        "minItems": 1,
+        "description": "Add one entry per TerraMow on your network.",
         "items": {
           "type": "object",
+          "required": ["name", "host", "password"],
           "properties": {
             "name": {
               "title": "Display Name",
               "type": "string",
               "default": "TerraMow V600",
-              "required": true,
               "description": "Name shown in HomeKit."
             },
             "host": {
               "title": "Mower IP / Hostname",
               "type": "string",
-              "required": true,
               "placeholder": "192.168.1.50",
-              "description": "Local IP of the TerraMow. Find it in the TerraMow app device info."
+              "description": "Local IP from TerraMow app → device info.",
+              "format": "hostname"
             },
             "password": {
               "title": "MQTT Password",
               "type": "string",
-              "required": true,
-              "description": "Shown in the TerraMow app after enabling Home Assistant integration."
+              "format": "password",
+              "description": "Shown in the TerraMow app after enabling Home Assistant."
             },
             "port": {
               "title": "MQTT Port",
               "type": "integer",
               "default": 1883,
-              "description": "Usually 1883. Leave default unless you changed it."
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Usually 1883."
             },
             "lowBatteryThreshold": {
               "title": "Low Battery Threshold (%)",

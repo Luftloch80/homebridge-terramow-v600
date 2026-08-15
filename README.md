@@ -12,11 +12,22 @@ The mower runs an on-device MQTT broker. This plugin connects over your LAN — 
 
 ## Install
 
+### Homebridge UI (recommended)
+
+1. Open **Plugins**
+2. Search for **TerraMow V600**, or use **Install from GitHub / npm**:
+   - npm: `homebridge-terramow-v600` (when published)
+   - GitHub: `Luftloch80/homebridge-terramow-v600`
+3. Open the plugin **Settings** — the Homebridge UI form includes an MQTT **Test Connection** button
+4. Save and restart Homebridge
+
+### Command line
+
 ```bash
 npm install -g homebridge-terramow-v600
+# or directly from GitHub:
+npm install -g github:Luftloch80/homebridge-terramow-v600
 ```
-
-Or install from the Homebridge UI plugin search: **TerraMow V600**.
 
 ## Configuration
 
@@ -87,6 +98,14 @@ Commands:
 - Pause → DP `105`
 - Resume → DP `106`
 - Dock → DP `103` `{ "mode": "START_MODE_RETURN" }`
+
+## Homebridge UI
+
+This plugin ships a Config UI X / Homebridge UI settings page (`homebridge-ui/`) with:
+
+- Setup instructions
+- MQTT **Test Connection** against the mower’s on-device broker
+- The standard schema form for platform + mower options (`customUi` + `showSchemaForm`)
 
 ## Development
 

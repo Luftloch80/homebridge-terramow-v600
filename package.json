@@ -2,13 +2,22 @@
   "name": "homebridge-terramow-v600",
   "displayName": "TerraMow V600",
   "type": "module",
-  "version": "1.0.0",
-  "description": "Homebridge plugin for TerraMow V600 (and other TerraMow models) via the local MQTT Home Assistant interface.",
+  "version": "1.1.0",
+  "description": "Homebridge plugin for TerraMow V600 (and other TerraMow models) via the local MQTT Home Assistant interface. Includes a Homebridge UI settings page with MQTT connection test.",
   "author": "Alexander Droste",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/Luftloch80/homebridge-terramow-v600#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luftloch80/homebridge-terramow-v600.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Luftloch80/homebridge-terramow-v600/issues"
+  },
   "keywords": [
     "homebridge-plugin",
     "homebridge",
+    "homebridge-ui",
     "terramow",
     "v600",
     "lawn-mower",
@@ -16,6 +25,13 @@
     "mqtt"
   ],
   "main": "dist/index.js",
+  "files": [
+    "dist",
+    "config.schema.json",
+    "homebridge-ui",
+    "LICENSE",
+    "README.md"
+  ],
   "engines": {
     "node": "^18.20.0 || ^20.15.1 || ^22 || ^24",
     "homebridge": "^1.8.0 || ^2.0.0"
@@ -28,6 +44,7 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "dependencies": {
+    "@homebridge/plugin-ui-utils": "^2.2.5",
     "mqtt": "^5.10.4"
   },
   "devDependencies": {

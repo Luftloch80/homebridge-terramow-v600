@@ -1,0 +1,126 @@
+<div class="card card-body mb-3">
+  <h5 class="card-title mb-2">TerraMow setup</h5>
+  <p class="mb-2 text-muted">
+    In the TerraMow app, enable <strong>Home Assistant</strong> integration. That starts the mower’s local MQTT broker and shows the password.
+    MQTT username is always <code>terramow</code>.
+  </p>
+  <ol class="mb-0 ps-3 text-muted">
+    <li>Enter the mower IP and MQTT password below (or in the form).</li>
+    <li>Use <strong>Test Connection</strong> to verify the broker is reachable.</li>
+    <li>Save, then restart Homebridge.</li>
+  </ol>
+</div>
+
+<div class="card card-body mb-3">
+  <h5 class="card-title mb-3">Test MQTT connection</h5>
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label" for="testHost">Host</label>
+      <input type="text" class="form-control" id="testHost" placeholder="192.168.1.50" autocomplete="off">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="testPassword">MQTT Password</label>
+      <input type="password" class="form-control" id="testPassword" placeholder="From TerraMow app" autocomplete="off">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" for="testPort">Port</label>
+      <input type="number" class="form-control" id="testPort" value="1883" min="1" max="65535">
+    </div>
+    <div class="col-md-2">
+      <button type="button" class="btn btn-primary w-100" id="testConnectionBtn">Test</button>
+    </div>
+  </div>
+  <div id="testResult" class="mt-3 small" hidden></div>
+</div>
+
+<script>
+(async () => {
+  const hostInput = document.getElementById('testHost');
+  const passwordInput = document.getElementById('testPassword');
+  const portInput = document.getElementById('testPort');
+  const resultEl = document.getElementById('testResult');
+  const testBtn = document.getElementById('testConnectionBtn');
+
+  function firstMower(configBlocks) {
+    if (!configBlocks?.length) {
+      return null;
+    }
+    const block = configBlocks[0];
+    if (Array.isArray(block.mowers) && block.mowers.length) {
+      return block.mowers[0];
+    }
+    if (block.host) {
+      return block;
+    }
+    return null;
+  }
+
+  function showResult(ok, message) {
+    resultEl.hidden = false;
+    resultEl.className = `mt-3 small alert ${ok ? 'alert-success' : 'alert-danger'} mb-0`;
+    resultEl.textContent = message;
+  }
+
+  // Prefill test fields from current plugin config
+  const pluginConfig = await homebridge.getPluginConfig();
+  const mower = firstMower(pluginConfig);
+  if (mower) {
+    if (mower.host) {
+      hostInput.value = mower.host;
+    }
+    if (mower.password) {
+      passwordInput.value = mower.password;
+    }
+    if (mower.port) {
+      portInput.value = mower.port;
+    }
+  }
+
+  // Keep standard schema form for full configuration
+  homebridge.showSchemaForm();
+
+  // When the schema form changes, refresh test field defaults if empty
+  homebridge.addEventListener('configChanged', (event) => {
+    const next = firstMower(event.data);
+    if (!next) {
+      return;
+    }
+    if (!hostInput.value && next.host) {
+      hostInput.value = next.host;
+    }
+    if (!passwordInput.value && next.password) {
+      passwordInput.value = next.password;
+    }
+    if (next.port) {
+      portInput.value = next.port;
+    }
+  });
+
+  testBtn.addEventListener('click', async () => {
+    const host = hostInput.value.trim();
+    const password = passwordInput.value;
+    const port = Number(portInput.value) || 1883;
+
+    if (!host || !password) {
+      homebridge.toast.error('Host and MQTT password are required.', 'Missing fields');
+      showResult(false, 'Enter host and MQTT password first.');
+      return;
+    }
+
+    homebridge.showSpinner();
+    testBtn.disabled = true;
+    try {
+      const response = await homebridge.request('/test-connection', { host, password, port });
+      homebridge.toast.success(response.message, 'Connected');
+      showResult(true, response.message);
+    } catch (error) {
+      const detail = error?.error?.message || error?.message || 'Unknown error';
+      homebridge.toast.error(detail, 'Connection failed');
+      showResult(false, detail);
+    } finally {
+      testBtn.disabled = false;
+      homebridge.hideSpinner();
+    }
+  });
+})();
+</script>
