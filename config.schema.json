@@ -8,39 +8,42 @@
   "footerDisplay": "Username is fixed as <code>terramow</code>. Need help? See the <a href=\"https://github.com/Luftloch80/homebridge-terramow-v600\" target=\"_blank\">plugin README</a>.",
   "schema": {
     "type": "object",
-    "required": ["name", "mowers"],
     "properties": {
       "name": {
         "title": "Platform Name",
         "type": "string",
         "default": "TerraMow",
+        "required": true,
         "description": "Internal Homebridge platform name."
       },
       "mowers": {
         "title": "Mowers",
         "type": "array",
-        "minItems": 1,
+        "required": true,
         "description": "Add one entry per TerraMow on your network.",
         "items": {
           "type": "object",
-          "required": ["name", "host", "password"],
           "properties": {
             "name": {
               "title": "Display Name",
               "type": "string",
               "default": "TerraMow V600",
+              "required": true,
               "description": "Name shown in HomeKit."
             },
             "host": {
               "title": "Mower IP / Hostname",
               "type": "string",
+              "default": "",
+              "required": true,
               "placeholder": "192.168.1.50",
-              "description": "Local IP from TerraMow app → device info.",
-              "format": "hostname"
+              "description": "Local IP from TerraMow app → device info."
             },
             "password": {
               "title": "MQTT Password",
               "type": "string",
+              "default": "",
+              "required": true,
               "format": "password",
               "description": "Shown in the TerraMow app after enabling Home Assistant."
             },

@@ -5,9 +5,9 @@
     MQTT username is always <code>terramow</code>.
   </p>
   <ol class="mb-0 ps-3 text-muted">
-    <li>Enter the mower IP and MQTT password below (or in the form).</li>
-    <li>Use <strong>Test Connection</strong> to verify the broker is reachable.</li>
-    <li>Save, then restart Homebridge.</li>
+    <li>Enter the mower IP and MQTT password in the form below.</li>
+    <li>Optionally use <strong>Test Connection</strong> to verify the broker.</li>
+    <li>Click <strong>Save</strong>, then restart Homebridge.</li>
   </ol>
 </div>
 
@@ -35,11 +35,33 @@
 
 <script>
 (async () => {
+  const PLATFORM = 'TerraMowV600';
   const hostInput = document.getElementById('testHost');
   const passwordInput = document.getElementById('testPassword');
   const portInput = document.getElementById('testPort');
   const resultEl = document.getElementById('testResult');
   const testBtn = document.getElementById('testConnectionBtn');
+
+  function defaultMower() {
+    return {
+      name: 'TerraMow V600',
+      host: '',
+      password: '',
+      port: 1883,
+      lowBatteryThreshold: 20,
+      showPauseSwitch: true,
+      showDockSwitch: true,
+      showSensors: true,
+    };
+  }
+
+  function defaultConfig() {
+    return {
+      platform: PLATFORM,
+      name: 'TerraMow',
+      mowers: [defaultMower()],
+    };
+  }
 
   function firstMower(configBlocks) {
     if (!configBlocks?.length) {
@@ -61,10 +83,10 @@
     resultEl.textContent = message;
   }
 
-  // Prefill test fields from current plugin config
-  const pluginConfig = await homebridge.getPluginConfig();
-  const mower = firstMower(pluginConfig);
-  if (mower) {
+  function applyTestFields(mower) {
+    if (!mower) {
+      return;
+    }
     if (mower.host) {
       hostInput.value = mower.host;
     }
@@ -76,24 +98,65 @@
     }
   }
 
-  // Keep standard schema form for full configuration
+  // Ensure a writable platform block exists before showing the schema form.
+  // Without this, Save has nothing to write into config.json.
+  let pluginConfig = await homebridge.getPluginConfig();
+  let changed = false;
+
+  if (!pluginConfig.length) {
+    pluginConfig = [defaultConfig()];
+    changed = true;
+  } else {
+    const block = pluginConfig[0];
+    if (!block.platform) {
+      block.platform = PLATFORM;
+      changed = true;
+    }
+    if (!block.name) {
+      block.name = 'TerraMow';
+      changed = true;
+    }
+    if (!Array.isArray(block.mowers) || block.mowers.length === 0) {
+      // Migrate legacy flat host/password config into mowers[]
+      if (block.host || block.password) {
+        block.mowers = [{
+          ...defaultMower(),
+          name: block.name || 'TerraMow V600',
+          host: block.host || '',
+          password: block.password || '',
+          port: block.port || 1883,
+          lowBatteryThreshold: block.lowBatteryThreshold ?? 20,
+          showPauseSwitch: block.showPauseSwitch ?? true,
+          showDockSwitch: block.showDockSwitch ?? true,
+          showSensors: block.showSensors ?? true,
+        }];
+      } else {
+        block.mowers = [defaultMower()];
+      }
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    await homebridge.updatePluginConfig(pluginConfig);
+  }
+
+  applyTestFields(firstMower(pluginConfig));
+
+  // Standard schema form — Homebridge Save button persists this to config.json
   homebridge.showSchemaForm();
 
-  // When the schema form changes, refresh test field defaults if empty
   homebridge.addEventListener('configChanged', (event) => {
-    const next = firstMower(event.data);
-    if (!next) {
+    const blocks = event.data || [];
+    if (!blocks.length) {
       return;
     }
-    if (!hostInput.value && next.host) {
-      hostInput.value = next.host;
+    // Keep platform key present so Homebridge recognizes the block
+    if (!blocks[0].platform) {
+      blocks[0].platform = PLATFORM;
+      homebridge.updatePluginConfig(blocks);
     }
-    if (!passwordInput.value && next.password) {
-      passwordInput.value = next.password;
-    }
-    if (next.port) {
-      portInput.value = next.port;
-    }
+    applyTestFields(firstMower(blocks));
   });
 
   testBtn.addEventListener('click', async () => {
@@ -113,6 +176,20 @@
       const response = await homebridge.request('/test-connection', { host, password, port });
       homebridge.toast.success(response.message, 'Connected');
       showResult(true, response.message);
+
+      // Also write tested values into the plugin config so Save persists them
+      const current = await homebridge.getPluginConfig();
+      const block = current[0] || defaultConfig();
+      block.platform = PLATFORM;
+      block.name = block.name || 'TerraMow';
+      if (!Array.isArray(block.mowers) || !block.mowers.length) {
+        block.mowers = [defaultMower()];
+      }
+      block.mowers[0].host = host;
+      block.mowers[0].password = password;
+      block.mowers[0].port = port;
+      await homebridge.updatePluginConfig([block]);
+      homebridge.showSchemaForm();
     } catch (error) {
       const detail = error?.error?.message || error?.message || 'Unknown error';
       homebridge.toast.error(detail, 'Connection failed');
