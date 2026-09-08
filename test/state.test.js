@@ -6,6 +6,7 @@ import {
   deriveActivity,
   isAtBase,
   isCharging,
+  isFullyCharged,
   isMowingActivity,
   isRainDelay,
   bladeFilterLife,
@@ -157,6 +158,9 @@ describe('deriveActivity', () => {
 describe('helpers', () => {
   it('classifies charging and rain delay', () => {
     assert.equal(isCharging({ state: 'BATTERY_STATE_CHARGING', chargerConnected: true, temperature: 'BATTERY_TEMPRETURE_NORMAL', powerSwitchOn: true }), true);
+    assert.equal(isCharging({ state: 'BATTERY_STATE_CHARGED', chargerConnected: true, temperature: 'BATTERY_TEMPRETURE_NORMAL', powerSwitchOn: true }), false);
+    assert.equal(isFullyCharged({ state: 'BATTERY_STATE_CHARGED', chargerConnected: true, temperature: 'BATTERY_TEMPRETURE_NORMAL', powerSwitchOn: true }), true);
+    assert.equal(isFullyCharged({ state: 'BATTERY_STATE_CHARGING', chargerConnected: true, temperature: 'BATTERY_TEMPRETURE_NORMAL', powerSwitchOn: true }), false);
     assert.equal(isMowingActivity('mowing'), true);
     assert.equal(isMowingActivity('paused'), true);
     assert.equal(isMowingActivity('docked'), false);

@@ -235,8 +235,14 @@ export function isMowingActivity(activity: MowerActivity): boolean {
   return activity === 'mowing' || activity === 'paused';
 }
 
+/** Actively drawing charge current — false again once the battery is topped off. */
 export function isCharging(status: BatteryStatus): boolean {
-  return status.state === 'BATTERY_STATE_CHARGING' || status.state === 'BATTERY_STATE_CHARGED';
+  return status.state === 'BATTERY_STATE_CHARGING';
+}
+
+/** Sitting on the dock at full charge — distinct from isCharging so "Charging" doesn't stick at 100%. */
+export function isFullyCharged(status: BatteryStatus): boolean {
+  return status.state === 'BATTERY_STATE_CHARGED';
 }
 
 export function isRainDelay(task: TaskStatus): boolean {

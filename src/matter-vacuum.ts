@@ -2,7 +2,7 @@ import type { API, Logger, MatterAccessory } from 'homebridge';
 
 import type { TerraMowClient } from './terramow-client.js';
 import { MANUFACTURER } from './matter-vendor.js';
-import { isCharging } from './state.js';
+import { isCharging, isFullyCharged } from './state.js';
 import type { MowerConfig, MowerState } from './types.js';
 
 const RUN_MODE_IDLE = 0;
@@ -209,13 +209,12 @@ export class TerraMowMatterVacuum {
     const batPercentRemaining = Math.max(0, Math.min(200, Math.round(state.batteryLevel * 2)));
     const threshold = this.mowerConfig.lowBatteryThreshold ?? 20;
     const batChargeLevel = state.batteryLevel <= threshold ? POWER.CHARGE_WARNING : POWER.CHARGE_OK;
-    const charging = isCharging(state.batteryStatus);
     let batChargeState: number = POWER.CHARGE_STATE_NOT_CHARGING;
     if (!state.connected) {
       batChargeState = POWER.CHARGE_STATE_UNKNOWN;
-    } else if (charging && state.batteryLevel >= 100) {
+    } else if (isFullyCharged(state.batteryStatus)) {
       batChargeState = POWER.CHARGE_STATE_FULL;
-    } else if (charging) {
+    } else if (isCharging(state.batteryStatus)) {
       batChargeState = POWER.CHARGE_STATE_CHARGING;
     }
 
