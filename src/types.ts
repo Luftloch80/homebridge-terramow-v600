@@ -159,6 +159,7 @@ export interface MowerState {
 
 export const MOW_MISSIONS = new Set<string>([
   'MISSION_GLOBAL_CLEAN',
+  'MISSION_BUILD_MAP',
   'MISSION_BUILD_MAP_AND_CLEAN',
   'MISSION_TEMPORARY_CLEAN',
   'MISSION_REMOTE_CONTROL_CLEAN',

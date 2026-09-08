@@ -47,6 +47,14 @@ export class TerraMowClient extends EventEmitter {
   private readonly log: NonNullable<TerraMowClientOptions['logger']>;
   private state: MowerState = createInitialState();
   private destroyed = false;
+  /**
+   * True once a task-status update (DP 107) has been received on the current
+   * connection. Cleared on every disconnect so a stale "mowing"/"returning"
+   * task cached from before an outage can't make start/pause/dock silently
+   * no-op instead of publishing — that swallowed command is what makes the
+   * mower look like it "won't wake up".
+   */
+  private hasTaskStatus = false;
 
   constructor(private readonly options: TerraMowClientOptions) {
     super();
@@ -95,12 +103,14 @@ export class TerraMowClient extends EventEmitter {
 
     this.client.on('close', () => {
       this.log.warn('TerraMow MQTT connection closed');
+      this.hasTaskStatus = false;
       this.updateState({ connected: false });
     });
 
     this.client.on('error', (error: Error) => {
       this.log.error(`TerraMow MQTT error: ${error.message}`);
       this.emit('error', error);
+      this.hasTaskStatus = false;
       this.updateState({ connected: false });
     });
 
@@ -126,7 +136,7 @@ export class TerraMowClient extends EventEmitter {
     }
 
     const { task } = this.state;
-    if (MOW_MISSIONS_RUNTIME.has(task.mission)) {
+    if (this.hasTaskStatus && MOW_MISSIONS_RUNTIME.has(task.mission)) {
       if (
         task.subMission === 'SUB_MISSION_FLEXIBLE_STATION_WAIT' ||
         task.state === 'MISSION_STATE_PAUSE'
@@ -150,7 +160,7 @@ export class TerraMowClient extends EventEmitter {
     if (!this.canAcceptCommand()) {
       return false;
     }
-    if (this.state.task.state === 'MISSION_STATE_PAUSE') {
+    if (this.hasTaskStatus && this.state.task.state === 'MISSION_STATE_PAUSE') {
       this.log.debug('Already paused; ignoring pause');
       return true;
     }
@@ -170,10 +180,10 @@ export class TerraMowClient extends EventEmitter {
     }
 
     const { task } = this.state;
-    if (RECHARGE_MISSIONS_RUNTIME.has(task.mission) && task.state === 'MISSION_STATE_PAUSE') {
+    if (this.hasTaskStatus && RECHARGE_MISSIONS_RUNTIME.has(task.mission) && task.state === 'MISSION_STATE_PAUSE') {
       return this.resume();
     }
-    if (RECHARGE_MISSIONS_RUNTIME.has(task.mission) && task.state === 'MISSION_STATE_RUNNING') {
+    if (this.hasTaskStatus && RECHARGE_MISSIONS_RUNTIME.has(task.mission) && task.state === 'MISSION_STATE_RUNNING') {
       this.log.debug('Already returning; ignoring dock');
       return true;
     }
@@ -258,6 +268,7 @@ export class TerraMowClient extends EventEmitter {
       case DP.TASK_STATUS: {
         const task = parseTaskStatus(parsed);
         if (task) {
+          this.hasTaskStatus = true;
           this.updateState({ task });
         }
         break;
@@ -382,6 +393,7 @@ export class TerraMowClient extends EventEmitter {
 
 const MOW_MISSIONS_RUNTIME = new Set([
   'MISSION_GLOBAL_CLEAN',
+  'MISSION_BUILD_MAP',
   'MISSION_BUILD_MAP_AND_CLEAN',
   'MISSION_TEMPORARY_CLEAN',
   'MISSION_REMOTE_CONTROL_CLEAN',
