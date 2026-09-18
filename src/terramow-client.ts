@@ -109,7 +109,11 @@ export class TerraMowClient extends EventEmitter {
 
     this.client.on('error', (error: Error) => {
       this.log.error(`TerraMow MQTT error: ${error.message}`);
-      this.emit('error', error);
+      // Do not re-emit 'error' here: nothing ever listens for it on this
+      // EventEmitter, and Node throws synchronously on an unhandled 'error'
+      // event, which was crashing the whole child bridge on every MQTT
+      // hiccup (keepalive/connack timeout) until Homebridge gave up
+      // restarting it. mqtt.js already retries the connection on its own.
       this.hasTaskStatus = false;
       this.updateState({ connected: false });
     });
