@@ -80,7 +80,11 @@ export class TerraMowClient extends EventEmitter {
     const mqttOptions: IClientOptions = {
       username: MQTT_USERNAME,
       password: this.options.password,
-      keepalive: 30,
+      // 60s (rather than the mqtt.js default 30s/45s-timeout pair) gives the
+      // mower's on-device broker more slack to answer a PINGREQ while it's
+      // throttling its own network stack in a low-power state, so a brief
+      // stall there doesn't get flagged as a dead connection.
+      keepalive: 60,
       reconnectPeriod: 5000,
       connectTimeout: 10_000,
       clean: true,
